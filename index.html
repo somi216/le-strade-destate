@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Le Strade d'Estate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Jua&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="screen" id="screen" role="application" tabindex="0"
+       aria-label="Le Strade d'Estate 오프닝 화면. 스페이스바나 클릭으로 진행합니다.">
+    <canvas id="cv" width="320" height="180"></canvas>
+
+    <div class="hud">
+      <button id="soundBtn" type="button" aria-pressed="false">소리 켜기</button>
+      <button id="skipBtn" type="button">건너뛰기</button>
+    </div>
+
+    <div class="caption" id="caption"><small>CAPITOLO 0</small>이탈리아, 어느 여름 아침</div>
+
+    <div class="dialog" id="dialog" aria-live="polite">
+      <span class="who" id="who">엘리엇</span>
+      <p class="line" id="line"></p>
+      <span class="next" id="nextMark">▼</span>
+    </div>
+
+    <div class="title" id="title">
+      <h1>Le Strade d'Estate</h1>
+      <div class="sub">여름의 자전거 길</div>
+      <div class="press">스페이스바 또는 화면을 눌러 출발</div>
+    </div>
+
+    <div class="end" id="end">
+      <p class="ch">CAPITOLO 1</p>
+      <p class="name">사이프러스 길</p>
+      <p class="soon">본편은 곧 이어집니다</p>
+      <button id="replayBtn" type="button">오프닝 다시 보기</button>
+    </div>
+  </div>
+
+  <div class="help">
+    <span><kbd>SPACE</kbd><kbd>ENTER</kbd>또는 클릭·탭으로 대사를 넘겨요</span>
+    <span>캐릭터 엘리엇과 배경은 이 게임을 위한 오리지널입니다</span>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
