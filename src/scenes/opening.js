@@ -7,6 +7,18 @@ const ease = t => (t < 0 ? 0 : t > 1 ? 1 : 1 - Math.pow(1 - t, 3));
 
 let phase, t, lineIdx, typed, typingDone;
 
+// 등장 연출 도중에 누르면 연출을 끝내고 바로 대화를 시작한다
+function jumpToDialogue(game) {
+  ui.caption(false);
+  game.fade = 0;
+  game.speed = 40;
+  game.showRiders = true;
+  game.riders[0].x = 150;
+  game.riders[1].x = 112;
+  phase = 'dialogue'; t = 0;
+  showLine(0);
+}
+
 function showLine(i) {
   lineIdx = i;
   typed = 0;
@@ -56,7 +68,7 @@ export const opening = {
   },
 
   advance(game) {
-    if (phase !== 'dialogue') { game.switchTo('title'); return; }   // 등장 중에 누르면 건너뛰기
+    if (phase !== 'dialogue') { jumpToDialogue(game); return; }     // 등장 중에 누르면 대화로 바로 (건너뛰기는 버튼으로만)
     if (!typingDone) { typed = LINES[lineIdx].text.length; return; } // 글자 출력 중이면 한 번에 다 보여 주기
     if (lineIdx < LINES.length - 1) showLine(lineIdx + 1);
     else game.switchTo('title');
