@@ -7,15 +7,87 @@ export function createRiders() {
   return [
     {
       name: 'elliot', x: -60, y: 150, phase: 0.8,
-      frame: '#2f6fb0', shirt: '#f6f1e6', stripe: '#cf4b3a', pants: '#e3d3a8',
-      skin: '#f0c9a0', hair: '#e8c45c', hat: '#e9cf7a', hatBand: '#8a5a2b'
+      frame: '#a8443a',   // 청바지와 구분되도록 붉은 자전거
+      shirt: '#f7f6f1', shirtShade: '#d5d8df', stripe: null, collar: 'open', sleeves: 'rolled', // 흰 와이셔츠
+      pants: '#4f74a8', longPants: true,                                                        // 청바지
+      skin: '#f0c9a0', hair: '#6b4226', hairLit: '#9a6640', hairStyle: 'windswept'
     },
     {
       name: 'me', x: -100, y: 156, phase: 0,
-      frame: '#3f8a52', shirt: '#f2c230', stripe: null, pants: '#3e4f7a',
-      skin: '#e6b48c', hair: '#5a3a24', cap: '#c9603f'
+      frame: '#3f8a52', shirt: '#f2d7ff', stripe: null, pants: '#3e4f7a',
+      skin: '#f7d2b3', hair: '#d89f2d', hairLit: '#a9713f', hairStyle: 'long'
     }
   ];
+}
+
+// 휘날리는 짧은 머리. 한 프레임은 가로 7 × 세로 5 픽셀 그림이다.
+// 열 0이 머리 뒤쪽 끝(hx-3), 열 3~6이 얼굴 위, 행 0이 정수리 위(hy-1), 행 4가 목덜미(hy+3).
+// h = 머리색, l = 햇빛 받은 머리색, . = 비움(얼굴이 보임)
+const WINDSWEPT = [
+  ['.hlllh.',    // 머리끝이 위로 날린 모양
+   'hhhhhh.',
+   '.hhhh..',
+   '.hhhh..',
+   '...h...'],
+  ['.hlllh.',    // 가운데
+   '.hhhhh.',
+   'hhhhh..',
+   '..hh...',
+   '.hhh...'],
+  ['..lllh.',    // 머리끝이 아래로 처진 모양
+   '.hhhhh.',
+   'hhhhh..',
+   'hhhh...',
+   '..hh...']
+];
+
+// 길게 휘날리는 머리. 한 프레임은 가로 10 × 세로 7 픽셀 그림이다.
+// 열 0~5가 뒤로 날리는 머리, 열 6~9가 얼굴 위, 행 0이 정수리 위(hy-1), 행 6이 어깨 높이(hy+5).
+const LONG_HAIR = [
+  ['...hhllll.',    // 머리끝이 위로 날린 모양
+   '...hhhhhh.',
+   '..hhhhh...',
+   '..hhhhh...',
+   '...lhhh...',
+   '....hhh...',
+   '....hhh...',
+   '....hhh...',
+   '....h.....'],
+  ['....hllll.',    // 가운데
+   '...hhhhhh.',
+   '..hhhhh...',
+   '..hhhhh...',
+   '...hhhh...',
+   '....hhh...',
+   '....hhh...',
+   '....hhh...',
+   '...hh.....'],
+  ['....hllll.',    // 머리끝이 아래로 처진 모양
+   '...hhhhhh.',
+   '..hhhhh...',
+   '...hhhh...',
+   '...hhh....',
+   '....hhh...',
+   '..lhhhhh..',
+   '..hhhhhh..',
+   '....hhh...']
+];
+
+// 머리 스타일 목록: 그림 묶음과, 그림을 얼굴보다 몇 칸 왼쪽에서 시작할지(offsetX)
+const HAIR_STYLES = {
+  windswept: { frames: WINDSWEPT, offsetX: -3 },   // 엘리엇
+  long: { frames: LONG_HAIR, offsetX: -6 }         // 나
+};
+
+const FLUTTER = [0, 1, 2, 1];   // 위 → 가운데 → 아래 → 가운데 순서로 반복
+
+function drawHair(frame, x0, y0, r) {
+  frame.forEach((row, dy) => {
+    [...row].forEach((c, dx) => {
+      if (c === 'h') px(x0 + dx, y0 + dy, r.hair);
+      else if (c === 'l') px(x0 + dx, y0 + dy, r.hairLit);
+    });
+  });
 }
 
 function wheel(cx, cy, angle) {
@@ -56,8 +128,9 @@ export function drawRider(r, wheelAngle) {
   [0, Math.PI].forEach((o, k) => {
     const pedal = [crank[0] + Math.cos(crankA + o) * 3, crank[1] + Math.sin(crankA + o) * 3];
     const knee = [(hip[0] + pedal[0]) / 2 + 3, (hip[1] + pedal[1]) / 2 - 2];
-    line(hip[0], hip[1], knee[0], knee[1], k === 0 ? r.pants : shade(r.pants), true);
-    line(knee[0], knee[1], pedal[0], pedal[1], r.skin);
+    const legColor = k === 0 ? r.pants : shade(r.pants);   // 뒤쪽 다리는 조금 어둡게
+    line(hip[0], hip[1], knee[0], knee[1], legColor, true);
+    line(knee[0], knee[1], pedal[0], pedal[1], r.longPants ? legColor : r.skin); // 긴바지면 정강이도 바지색
     px(pedal[0], pedal[1], P.leather);
   });
 
@@ -67,10 +140,17 @@ export function drawRider(r, wheelAngle) {
     const sx = hip[0] + (shoulder[0] - hip[0]) * t;
     const sy = hip[1] + (shoulder[1] - hip[1]) * t;
     rect(sx - 1, sy, 3, 1, r.stripe && Math.round(sy) % 2 === 0 ? r.stripe : r.shirt);
+    if (r.shirtShade) px(sx - 1, sy, r.shirtShade);        // 등 쪽 그림자로 흰 셔츠에 입체감
   }
+  if (r.collar === 'open') px(shoulder[0] + 1, shoulder[1], r.skin);  // 단추 푼 옷깃
 
   // 팔
-  line(shoulder[0], shoulder[1] + 1, head[0] + 1, head[1] - 3, r.skin);
+  const hand = [head[0] + 1, head[1] - 3];
+  line(shoulder[0], shoulder[1] + 1, hand[0], hand[1], r.skin);
+  if (r.sleeves === 'rolled') {                             // 팔꿈치까지 걷은 소매
+    line(shoulder[0], shoulder[1] + 1,
+         shoulder[0] + (hand[0] - shoulder[0]) * 0.5, shoulder[1] + 1 + (hand[1] - shoulder[1] - 1) * 0.5, r.shirt);
+  }
   px(shoulder[0], shoulder[1] + 1, r.shirt);
 
   // 머리와 모자
@@ -82,6 +162,11 @@ export function drawRider(r, wheelAngle) {
     rect(hx - 2, hy - 1, 8, 1, r.hat);
     rect(hx, hy - 3, 4, 2, r.hat);
     rect(hx, hy - 1, 4, 1, r.hatBand);
+  } else if (HAIR_STYLES[r.hairStyle]) {
+    // 달리는 속도에 맞춰 머리 그림 3장을 번갈아 보여 준다(멈추면 머리도 멈춘다)
+    const style = HAIR_STYLES[r.hairStyle];
+    const n = Math.floor(wheelAngle * 0.9 + r.phase * 3);
+    drawHair(style.frames[FLUTTER[((n % 4) + 4) % 4]], hx + style.offsetX, hy - 1, r);
   } else {
     rect(hx, hy - 1, 4, 1, r.cap);
     rect(hx + 3, hy, 2, 1, r.cap);
